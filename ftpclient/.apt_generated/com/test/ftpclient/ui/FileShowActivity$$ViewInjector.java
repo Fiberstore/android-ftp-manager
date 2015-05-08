@@ -8,20 +8,20 @@ import butterknife.ButterKnife.Injector;
 public class FileShowActivity$$ViewInjector<T extends com.test.ftpclient.ui.FileShowActivity> implements Injector<T> {
   @Override public void inject(final Finder finder, final T target, Object source) {
     View view;
-    view = finder.findRequiredView(source, 2131099719, "field 'viewContent'");
-    target.viewContent = finder.castView(view, 2131099719, "field 'viewContent'");
-    view = finder.findRequiredView(source, 2131099721, "field 'ivPhoto'");
-    target.ivPhoto = finder.castView(view, 2131099721, "field 'ivPhoto'");
     view = finder.findRequiredView(source, 2131099720, "field 'tvContent'");
     target.tvContent = finder.castView(view, 2131099720, "field 'tvContent'");
+    view = finder.findRequiredView(source, 2131099721, "field 'ivPhoto'");
+    target.ivPhoto = finder.castView(view, 2131099721, "field 'ivPhoto'");
     view = finder.findRequiredView(source, 2131099722, "field 'pdfView'");
     target.pdfView = finder.castView(view, 2131099722, "field 'pdfView'");
+    view = finder.findRequiredView(source, 2131099719, "field 'viewContent'");
+    target.viewContent = finder.castView(view, 2131099719, "field 'viewContent'");
   }
 
   @Override public void reset(T target) {
-    target.viewContent = null;
-    target.ivPhoto = null;
     target.tvContent = null;
+    target.ivPhoto = null;
     target.pdfView = null;
+    target.viewContent = null;
   }
 }
