@@ -1,0 +1,130 @@
+package com.test.ftpclient.ui;
+
+import java.io.File;
+import java.io.IOException;
+
+import org.simple.eventbus.Subscriber;
+import org.videolan.vlc.util.Util;
+
+import uk.co.senab.photoview.PhotoView;
+
+import android.text.TextUtils;
+import android.view.View;
+import android.widget.ScrollView;
+import android.widget.TextView;
+import android.widget.Toast;
+import butterknife.InjectView;
+
+import com.joanzapata.pdfview.PDFView;
+import com.joanzapata.pdfview.PDFView.Configurator;
+import com.joanzapata.pdfview.listener.OnPageChangeListener;
+import com.litesuits.common.io.FileUtils;
+import com.nostra13.universalimageloader.core.ImageLoader;
+import com.test.ftpclient.R;
+import com.test.ftpclient.utils.ParseUtils;
+
+public class FileShowActivity extends BaseActivity {
+
+	@InjectView(R.id.tv_content)
+	TextView tvContent;
+	@InjectView(R.id.pdfview)
+	PDFView pdfView;
+	@InjectView(R.id.view_content)
+	ScrollView viewContent;
+	@InjectView(R.id.iv_photo)
+	PhotoView ivPhoto;
+	// 缓存路径
+	String cachePath;
+
+	@Override
+	void initContentView() {
+		setContentView(R.layout.activity_file_show);
+	}
+
+	@Override
+	void initView() {
+		tvContent.setText("正在加载,请稍后...");
+	}
+
+	@Override
+	void initData() {
+
+	}
+	
+	@Subscriber(tag = "readvideo_success")
+	private void palyFile(String path) {
+		Util.openStream(this, path);
+		finish();
+		System.out.println("video");
+	}
+
+	@Subscriber(tag = "readtxt_success")
+	private void showFile(String path) {
+		cachePath = path;
+		File file = new File(path);
+		String fileEncode = FileUtils.getFileIncode(file);
+		String content = "";
+		try {
+			content = FileUtils.readFileToString(file, fileEncode);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+
+		tvContent.setText(content);
+	}
+
+	@Subscriber(tag = "readdoc_success")
+	private void showDoc(String path) {
+		cachePath = path;
+		String doc = ParseUtils.readDOC(path);
+		if (TextUtils.isEmpty(doc)) {
+			doc = ParseUtils.readDOCX(path);
+		}
+
+		tvContent.setText(doc);
+	}
+
+	@Subscriber(tag = "readxls_success")
+	private void showXls(String path) {
+		cachePath = path;
+		String xls = ParseUtils.readXLS(path);
+		if (TextUtils.isEmpty(xls)) {
+			xls = ParseUtils.readXLSX(path);
+		}
+
+		tvContent.setText(xls);
+	}
+
+	@Subscriber(tag = "readpdf_success")
+	private void showPdf(String path) {
+		cachePath = path;
+		viewContent.setVisibility(View.GONE);
+		pdfView.setVisibility(View.VISIBLE);
+		Configurator configurator = pdfView.fromFile(new File(path));
+		configurator.defaultPage(1);
+		configurator.onPageChange(new OnPageChangeListener() {
+
+			@Override
+			public void onPageChanged(int page, int pageCount) {
+				Toast.makeText(FileShowActivity.this, page + " / " + pageCount, 0)
+						.show();
+			}
+		});
+		configurator.load();
+	}
+	
+	@Subscriber(tag = "readimg_success")
+	private void showImg(String path) {
+		cachePath = path;
+		viewContent.setVisibility(View.GONE);
+		ivPhoto.setVisibility(View.VISIBLE);
+		ImageLoader.getInstance().displayImage("file:///" + path, ivPhoto);
+	}
+
+	@Override
+	public void onDestroy() {
+		com.test.ftpclient.utils.FileUtils.deleteAll(new File(cachePath));
+		super.onDestroy();
+	}
+
+}

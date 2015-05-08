@@ -1,0 +1,173 @@
+package com.test.ftpclient.service;
+
+import it.sauronsoftware.ftp4j.FTPClient;
+import it.sauronsoftware.ftp4j.FTPException;
+import it.sauronsoftware.ftp4j.FTPFile;
+import it.sauronsoftware.ftp4j.FTPIllegalReplyException;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
+import org.simple.eventbus.EventBus;
+import org.simple.eventbus.Subscriber;
+
+import com.test.ftpclient.app.Constants;
+
+import android.app.Service;
+import android.content.Intent;
+import android.os.IBinder;
+
+public class FtpService extends Service {
+
+	private FTPClient mFTPClient;
+	private ExecutorService cachedThreadPool;
+
+	@Override
+	public IBinder onBind(Intent intent) {
+		return null;
+	}
+
+	@Override
+	public void onCreate() {
+		EventBus.getDefault().register(this);
+
+		cachedThreadPool = Executors.newCachedThreadPool();
+		cachedThreadPool.execute(new Runnable() {
+
+			@Override
+			public void run() {
+				connFTP();
+			}
+		});
+
+		super.onCreate();
+	}
+
+	private void connFTP() {
+		mFTPClient = new FTPClient();
+		try {
+			mFTPClient.connect(Constants.HOST, Constants.PORT);
+			mFTPClient.login(Constants.USERNAME, Constants.PASSWORD);
+			mFTPClient.setType(FTPClient.TYPE_BINARY);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
+		EventBus.getDefault().post("", "login_success");
+	}
+
+	@Subscriber(tag = "start")
+	private void start(final FTPFile ftpFile) {
+		cachedThreadPool.execute(new Runnable() {
+
+			@Override
+			public void run() {
+				if (!mFTPClient.isConnected()) {
+					System.out.println("断线了");
+					connFTP();
+				}
+
+				File cachePath = new File(getCacheDir(), ftpFile.getName());
+
+				switch (ftpFile.getFileType()) {
+				case FTPFile.FILE_TYPE_VIDEO:
+					String path = "";
+					try {
+						path = Constants.PROTOCOL + Constants.HOST + ":"
+								+ Constants.PORT
+								+ mFTPClient.currentDirectory()
+								+ ftpFile.getName();
+					} catch (Exception e) {
+						e.printStackTrace();
+					}
+					// 播放视频文件
+					EventBus.getDefault().post(path, "readvideo_success");
+					System.out.println("readvideo_success");
+					break;
+				case FTPFile.FILE_TYPE_DOC:
+					download(ftpFile, cachePath);
+					// 读取DOC文件
+					EventBus.getDefault().post(cachePath.getPath(),
+							"readdoc_success");
+					break;
+				case FTPFile.FILE_TYPE_XLS:
+					download(ftpFile, cachePath);
+					// 读取XLS文件
+					EventBus.getDefault().post(cachePath.getPath(),
+							"readxls_success");
+					break;
+				case FTPFile.FILE_TYPE_TXT:
+					download(ftpFile, cachePath);
+					// 读取TXT文件
+					EventBus.getDefault().post(cachePath.getPath(),
+							"readtxt_success");
+					break;
+				case FTPFile.FILE_TYPE_PDF:
+					download(ftpFile, cachePath);
+					// 读取PDF文件
+					EventBus.getDefault().post(cachePath.getPath(),
+							"readpdf_success");
+					break;
+				case FTPFile.FILE_TYPE_IMG:
+					download(ftpFile, cachePath);
+					// 读取IMG文件
+					EventBus.getDefault().post(cachePath.getPath(),
+							"readimg_success");
+					break;
+				}
+
+			}
+
+		});
+	}
+
+	private void download(final FTPFile ftpFile, File cachePath) {
+		try {
+			mFTPClient.download(ftpFile.getName(), cachePath);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+
+	@Subscriber(tag = "showlist")
+	private void showList(String str) {
+		cachedThreadPool.execute(new Runnable() {
+
+			@Override
+			public void run() {
+				if (!mFTPClient.isConnected()) {
+					connFTP();
+				}
+
+				FTPFile[] fileList = null;
+				try {
+					fileList = mFTPClient.list();
+					EventBus.getDefault().post(fileList, "showlist_success");
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+			}
+		});
+	}
+
+	@Override
+	public void onDestroy() {
+		EventBus.getDefault().unregister(this);
+		cachedThreadPool.execute(new Runnable() {
+
+			@Override
+			public void run() {
+				try {
+					mFTPClient.disconnect(true);
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+			}
+		});
+
+		super.onDestroy();
+	}
+
+}

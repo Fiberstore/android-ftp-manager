@@ -1,0 +1,172 @@
+package com.example.android.net;
+
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
+
+import android.content.Context;
+
+import com.example.android.app.AppManager;
+import com.example.android.base.BaseRequest;
+import com.example.android.utils.LogUtils;
+import com.example.android.utils.NetUtils;
+import com.loopj.android.http.AsyncHttpClient;
+import com.loopj.android.http.AsyncHttpResponseHandler;
+import com.loopj.android.http.RequestHandle;
+import com.loopj.android.http.RequestParams;
+
+/**
+ * 网络访问控制中心 用于统一管理网络访问接口及相关配置
+ * 
+ * @author Ht
+ * 
+ */
+public class NetCenter {
+
+	private static final int GET = 1;
+	private static final int POST = 2;
+	private static final int PUT = 3;
+
+	/** 请求处理器队列管理池 */
+	private static Map<Context, Set<RequestHandle>> mRequestMap = new HashMap<Context, Set<RequestHandle>>();
+
+	/** 如需扩展更多功能,请浏览官方API自行封装：http://loopj.com/android-async-http/ */
+	private static AsyncHttpClient client = new AsyncHttpClient();
+
+	/**
+	 * 发起带参数的get请求
+	 * 
+	 * @param url
+	 *            请求路径
+	 * @param t
+	 *            继承自BaseRequest的请求参数实体类
+	 * @param responseHandler
+	 *            响应回调
+	 */
+	public static <T extends BaseRequest> void get(String url, T t,
+			AsyncHttpResponseHandler responseHandler) {
+
+		sendRequest(GET, url, t, responseHandler);
+	}
+
+	/**
+	 * 发起不带参数get请求
+	 * 
+	 * @param url
+	 *            请求路径
+	 * @param responseHandler
+	 *            响应回调
+	 */
+	public static void get(String url, AsyncHttpResponseHandler responseHandler) {
+
+		get(url, null, responseHandler);
+	}
+
+	/**
+	 * 发起带参数post请求
+	 * 
+	 * @param url
+	 *            请求路径
+	 * @param t
+	 *            继承自BaseRequest的请求参数实体类
+	 * @param responseHandler
+	 *            响应回调
+	 */
+	public static <T extends BaseRequest> void post(String url, T t,
+			AsyncHttpResponseHandler responseHandler) {
+
+		sendRequest(POST, url, t, responseHandler);
+	}
+
+	/**
+	 * 发起不带参数post请求
+	 * 
+	 * @param url
+	 *            请求路径
+	 * @param responseHandler
+	 *            响应回调
+	 */
+	public static void post(String url, AsyncHttpResponseHandler responseHandler) {
+
+		post(url, null, responseHandler);
+	}
+
+	/**
+	 * 发起网络请求
+	 * 
+	 * @param type
+	 *            请求类型
+	 * @param url
+	 *            请求路径
+	 * @param params
+	 *            请求参数
+	 * @param responseHandler
+	 *            响应回调
+	 */
+	private static <T extends BaseRequest> void sendRequest(int type,
+			String url, T t, AsyncHttpResponseHandler responseHandler) {
+		// 将传入的请求实体类映射成Map
+		Map<String, String> params = NetUtils.getParams(t);
+		// 将Map转换成请求参数
+		RequestParams requestParams = new RequestParams(params);
+
+		// 获取当前页面的Context
+		Context context = AppManager.getAppManager().currentActivity();
+
+		// 判断网络是否可用
+		if (!NetUtils.isNetworkConnected(context)) {
+			return;
+		}
+
+		RequestHandle requestHandle = null;
+		// 根据传入类型调用不同请求方法,可自行扩展
+		switch (type) {
+		case GET:
+			// 发起get请求,获取请求处理器
+			requestHandle = client.get(context, url, requestParams, responseHandler);
+			break;
+		case POST:
+			// 发起post请求,获取请求处理器
+			requestHandle = client.post(context, url, requestParams, responseHandler);
+			break;
+		case PUT:
+			// 发起post请求,获取请求处理器
+			// .....
+			requestHandle = client.put(context, url, requestParams, responseHandler);
+		default:
+			// 默认发起get请求
+			requestHandle = client.get(context, url, requestParams, responseHandler);
+			break;
+		}
+	}
+
+	/**
+	 * 根据Context创建一个请求队列,用于与Activity生命周期联动
+	 * 
+	 * @param context
+	 */
+	public static void init(Context context) {
+		Set<RequestHandle> mHandlerQueue = new HashSet<RequestHandle>();
+		mRequestMap.put(context, mHandlerQueue);
+	}
+
+	/** 取消当前Context的请求队列 */
+	public static void clearRequestQueue() {
+		Context context = AppManager.getAppManager().currentActivity();
+		Set<RequestHandle> mHandlerQueue = mRequestMap.get(context);
+		if (mHandlerQueue != null) {
+			LogUtils.i(context.getClass().getName() + "正在销毁对应请求");
+			synchronized (mHandlerQueue) {
+				for (RequestHandle handler : mHandlerQueue) {
+					// 请求未完成并且请求未被取消则取消请求
+					if (!handler.isFinished() && !handler.isCancelled()) {
+						// 强制打断请求,因为Context生命周期已结束
+						handler.cancel(true);
+						LogUtils.i(handler.toString() + "被移除请求管理队列");
+					}
+				}
+			}
+		}
+	}
+}

@@ -1,0 +1,17 @@
+package com.test.ftpclient.utils;
+
+public class FileUtils {
+	if(file.isFile() || file.list().length == 0)
+	  {
+	   file.delete();
+	  }
+	  else
+	  {
+	   File[] files = file.listFiles();
+	   for(File f : files)
+	   {
+	    deleteAll(f);//递归删除每一个文件
+	    f.delete();//删除该文件夹
+	   }
+	   }
+}

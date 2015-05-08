@@ -1,0 +1,111 @@
+package com.test.ftpclient.ui;
+
+import java.io.File;
+import java.io.IOException;
+
+import org.simple.eventbus.Subscriber;
+import org.videolan.vlc.util.Util;
+
+import android.text.TextUtils;
+import android.view.View;
+import android.widget.ScrollView;
+import android.widget.TextView;
+import android.widget.Toast;
+import butterknife.InjectView;
+
+import com.joanzapata.pdfview.PDFView;
+import com.joanzapata.pdfview.PDFView.Configurator;
+import com.joanzapata.pdfview.listener.OnLoadCompleteListener;
+import com.joanzapata.pdfview.listener.OnPageChangeListener;
+import com.litesuits.common.io.FileUtils;
+import com.test.ftpclient.R;
+import com.test.ftpclient.utils.ParseUtils;
+
+public class FileShowActivity extends BaseActivity {
+
+	@InjectView(R.id.tv_content)
+	TextView tvContent;
+	@InjectView(R.id.pdfview)
+	PDFView pdfView;
+	@InjectView(R.id.view_content)
+	ScrollView viewContent;
+
+	@Override
+	void initContentView() {
+		setContentView(R.layout.activity_file_show);
+	}
+
+	@Override
+	void initView() {
+		tvContent.setText("正在加载,请稍后...");
+	}
+
+	@Override
+	void initData() {
+
+	}
+
+	@Subscriber(tag = "readfile_success")
+	private void showFile(String path) {
+		File file = new File(path);
+		String fileEncode = FileUtils.getFileIncode(file);
+		String content = "";
+		try {
+			content = FileUtils.readFileToString(file, fileEncode);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+
+		tvContent.setText(content);
+	}
+
+	@Subscriber(tag = "readdoc_success")
+	private void showDoc(String path) {
+		String doc = ParseUtils.readDOC(path);
+		if (TextUtils.isEmpty(doc)) {
+			doc = ParseUtils.readDOCX(path);
+		}
+
+		tvContent.setText(doc);
+	}
+
+	@Subscriber(tag = "readxls_success")
+	private void showXls(String path) {
+		String xls = ParseUtils.readXLS(path);
+		if (TextUtils.isEmpty(xls)) {
+			xls = ParseUtils.readXLSX(path);
+		}
+
+		tvContent.setText(xls);
+	}
+
+	@Subscriber(tag = "readpdf_success")
+	private void showPdf(String path) {
+		viewContent.setVisibility(View.GONE);
+		pdfView.setVisibility(View.VISIBLE);
+		Configurator configurator = pdfView.fromFile(new File(path));
+		configurator.defaultPage(1);
+		configurator.showMinimap(false);
+		configurator.onPageChange(new OnPageChangeListener() {
+
+			@Override
+			public void onPageChanged(int page, int pageCount) {
+				Toast.makeText(FileShowActivity.this, page + " / " + pageCount, 0)
+						.show();
+			}
+		});
+		configurator.load();
+	}
+
+	@Subscriber(tag = "playfile_success")
+	private void palyFile(String path) {
+		Util.openStream(this, path);
+		finish();
+	}
+
+	@Override
+	public void onDestroy() {
+		super.onDestroy();
+	}
+
+}

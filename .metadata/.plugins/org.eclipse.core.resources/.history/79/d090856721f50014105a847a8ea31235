@@ -1,0 +1,24 @@
+// Generated code from Butter Knife. Do not modify!
+package com.test.ftpclient.ui;
+
+import android.view.View;
+import butterknife.ButterKnife.Finder;
+import butterknife.ButterKnife.Injector;
+
+public class FileShowActivity$$ViewInjector<T extends com.test.ftpclient.ui.FileShowActivity> implements Injector<T> {
+  @Override public void inject(final Finder finder, final T target, Object source) {
+    View view;
+    view = finder.findRequiredView(source, 2131099722, "field 'pdfView'");
+    target.pdfView = finder.castView(view, 2131099722, "field 'pdfView'");
+    view = finder.findRequiredView(source, 2131099720, "field 'tvContent'");
+    target.tvContent = finder.castView(view, 2131099720, "field 'tvContent'");
+    view = finder.findRequiredView(source, 2131099719, "field 'viewContent'");
+    target.viewContent = finder.castView(view, 2131099719, "field 'viewContent'");
+  }
+
+  @Override public void reset(T target) {
+    target.pdfView = null;
+    target.tvContent = null;
+    target.viewContent = null;
+  }
+}

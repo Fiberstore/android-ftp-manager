@@ -1,0 +1,23 @@
+package com.example.android.net;
+
+import org.apache.http.Header;
+
+import com.loopj.android.http.TextHttpResponseHandler;
+
+public class BeanHttpResponseHandler extends TextHttpResponseHandler {
+
+	@Override
+	public void onFailure(int statusCode, Header[] headers,
+			String responseString, Throwable throwable) {
+		// TODO Auto-generated method stub
+
+	}
+
+	@Override
+	public void onSuccess(int statusCode, Header[] headers,
+			String responseString) {
+		// TODO Auto-generated method stub
+
+	}
+
+}

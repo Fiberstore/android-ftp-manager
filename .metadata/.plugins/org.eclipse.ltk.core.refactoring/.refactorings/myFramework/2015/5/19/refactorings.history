@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<session version="1.0">
+<refactoring comment="Copy element &apos;CustomBaseAdapter.java&apos; to &apos;ftpclient/src/com.test.ftpclient.adapter&apos;&#x0D;&#x0A;- Original project: &apos;myFramework&apos;&#x0D;&#x0A;- Destination element: &apos;ftpclient/src/com.test.ftpclient.adapter&apos;&#x0D;&#x0A;- Original element: &apos;com.example.android.base.CustomBaseAdapter.java&apos;" description="Copy compilation unit" destination="=ftpclient/src&lt;com.test.ftpclient.adapter" element1="/src&lt;com.example.android.base{CustomBaseAdapter.java" files="0" flags="589830" folders="0" id="org.eclipse.jdt.ui.copy" policy="org.eclipse.jdt.ui.copyResources" stamp="1430897422480" units="1" version="1.0"/>
+</session>

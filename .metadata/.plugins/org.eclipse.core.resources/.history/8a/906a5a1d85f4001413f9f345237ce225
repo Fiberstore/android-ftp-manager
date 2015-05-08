@@ -1,0 +1,161 @@
+package com.test.ftpclient.service;
+
+import it.sauronsoftware.ftp4j.FTPClient;
+import it.sauronsoftware.ftp4j.FTPException;
+import it.sauronsoftware.ftp4j.FTPFile;
+import it.sauronsoftware.ftp4j.FTPIllegalReplyException;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
+import org.simple.eventbus.EventBus;
+import org.simple.eventbus.Subscriber;
+
+import com.test.ftpclient.app.Constants;
+
+import android.app.Service;
+import android.content.Intent;
+import android.os.IBinder;
+
+public class FtpService extends Service {
+
+	private FTPClient mFTPClient;
+	private ExecutorService cachedThreadPool;
+
+	@Override
+	public IBinder onBind(Intent intent) {
+		return null;
+	}
+
+	@Override
+	public void onCreate() {
+		EventBus.getDefault().register(this);
+
+		cachedThreadPool = Executors.newCachedThreadPool();
+		cachedThreadPool.execute(new Runnable() {
+
+			@Override
+			public void run() {
+				connFTP();
+			}
+		});
+
+		super.onCreate();
+	}
+
+	private void connFTP() {
+		mFTPClient = new FTPClient();
+		try {
+			mFTPClient.connect(Constants.HOST, Constants.PORT);
+			mFTPClient.login(Constants.USERNAME, Constants.PASSWORD);
+			mFTPClient.setType(FTPClient.TYPE_BINARY);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
+		EventBus.getDefault().post("", "login_success");
+	}
+
+	@Subscriber(tag = "showlist")
+	private void showList(String str) {
+		cachedThreadPool.execute(new Runnable() {
+
+			@Override
+			public void run() {
+				FTPFile[] fileList = null;
+				try {
+					fileList = mFTPClient.list();
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+				EventBus.getDefault().post(fileList, "showlist_success");
+			}
+		});
+	}
+
+	@Subscriber(tag = "readfile")
+	private void readFile(final FTPFile ftpFile) {
+		cachedThreadPool.execute(new Runnable() {
+
+			@Override
+			public void run() {
+				if (mFTPClient.isConnected()) {
+					connFTP();
+				}
+
+				File cachePath = new File(getCacheDir(), ftpFile.getName());
+				try {
+					mFTPClient.download(ftpFile.getName(), cachePath);
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+
+				EventBus.getDefault().post(cachePath.getPath(),
+						"readfile_success");
+			}
+		});
+	}
+	
+	@Subscriber(tag = "readdoc")
+	private void readFile(final FTPFile ftpFile) {
+		cachedThreadPool.execute(new Runnable() {
+
+			@Override
+			public void run() {
+				if (mFTPClient.isConnected()) {
+					connFTP();
+				}
+
+				File cachePath = new File(getCacheDir(), ftpFile.getName());
+				try {
+					mFTPClient.download(ftpFile.getName(), cachePath);
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+
+				EventBus.getDefault().post(cachePath.getPath(),
+						"readdoc_success");
+			}
+		});
+	}
+
+	@Subscriber(tag = "playfile")
+	private void palyFile(final FTPFile ftpFile) {
+		cachedThreadPool.execute(new Runnable() {
+
+			@Override
+			public void run() {
+
+				try {
+					EventBus.getDefault().post(
+							Constants.PROTOCOL + Constants.HOST + ":" + Constants.PORT
+									+ mFTPClient.currentDirectory()
+									+ ftpFile.getName(), "playfile_success");
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+			}
+		});
+	}
+
+	@Override
+	public void onDestroy() {
+		EventBus.getDefault().unregister(this);
+		cachedThreadPool.execute(new Runnable() {
+
+			@Override
+			public void run() {
+				try {
+					mFTPClient.disconnect(true);
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+			}
+		});
+
+		super.onDestroy();
+	}
+
+}

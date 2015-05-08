@@ -1,0 +1,58 @@
+package com.test.ftpclient.adapter;
+
+import it.sauronsoftware.ftp4j.FTPFile;
+
+import org.videolan.vlc.R;
+
+import android.content.Context;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.TextView;
+import butterknife.ButterKnife;
+import butterknife.InjectView;
+
+import com.litesuits.common.utils.FileUtil;
+
+public class FileAdapter extends CustomBaseAdapter<FTPFile> {
+
+	public FileAdapter(Context context) {
+		super(context);
+	}
+
+	@Override
+	public View getView(int position, View convertView, ViewGroup parent) {
+		ViewHolder holder = null;
+		if (convertView == null) {
+			convertView = getItemView(R.layout.item_file_list, parent);
+			holder = new ViewHolder(convertView);
+			convertView.setTag(holder);
+		} else {
+			holder = (ViewHolder) convertView.getTag();
+		}
+
+		holder.tvName.setText(getItemData(position).getName());
+		holder.tvType.setText(getItemData(position).getFileType());
+		holder.tvSize.setText(FileUtil.formatFileSizeToString(getItemData(
+				position).getSize()));
+		holder.tvDate.setText(getItemData(position).getModifiedDate()
+				.toString());
+
+		return convertView;
+	}
+
+	static class ViewHolder {
+		@InjectView(R.id.tv_name)
+		TextView tvName;
+		@InjectView(R.id.tv_type)
+		TextView tvType;
+		@InjectView(R.id.tv_size)
+		TextView tvSize;
+		@InjectView(R.id.tv_date)
+		TextView tvDate;
+
+		public ViewHolder(View view) {
+			ButterKnife.inject(this, view);
+		}
+	}
+
+}

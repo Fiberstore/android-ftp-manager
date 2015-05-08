@@ -1,0 +1,5 @@
+package com.test.ftpclient.app;
+
+public class Constants {
+	
+}

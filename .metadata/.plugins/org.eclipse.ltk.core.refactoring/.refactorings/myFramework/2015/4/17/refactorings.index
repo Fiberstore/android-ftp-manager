@@ -1,0 +1,28 @@
+1429494350384	Delete elements
+1429495945082	Rename package 'com.example.android.view'
+1429496550592	Rename package 'com.example.android.presenter'
+1429496565572	Rename type 'TestPresenter'
+1429496685271	Rename type 'HomeActivity'
+1429496745897	Rename method 'test'
+1429496986814	Rename type 'TestPresenterImpl'
+1429496992193	Rename type 'TestPresenter'
+1429497006634	Rename type 'IUserView'
+1429497064695	Rename type 'UserView'
+1429497879884	Rename type 'User'
+1429498083154	Rename type 'TestListener'
+1429498149563	Rename type 'TestModelImpl'
+1429498155063	Rename type 'ITestModel'
+1429498158233	Move compilation unit
+1429498165177	Rename package 'com.example.android.model.impl'
+1429498173912	Rename type 'UserModel'
+1429510041414	Convert local variable 'newsAdapter' to field
+1429510815491	Delete element
+1429512558605	Rename method 'baseParse'
+1429512571324	Rename method 'getParse'
+1429594127155	Delete element
+1429607886950	Delete element
+1429667901901	Copy compilation unit
+1429673152460	Move compilation unit
+1429769962676	Copy compilation unit
+1429774549900	Delete element
+1429776965913	Delete element
